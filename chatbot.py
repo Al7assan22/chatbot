@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import google.generativeai as genai
-import os
 
 genai.configure(api_key=("AIzaSyDqferTB7u2X44NuEPEQKgO2tYIVfmV0fE"))
 
@@ -72,6 +71,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
