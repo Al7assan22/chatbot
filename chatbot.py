@@ -63,6 +63,15 @@ if final_question:
         answer = ask_gemini(final_question, df)
     st.write("✅ Answer:")
     st.write(answer)
+st.markdown(
+    """
+    <hr>
+    <p style="text-align:center;color:#AAAAAA;font-size:12px;">
+    Developed by <strong>Alhassan Mohamed Haggag</strong>
+    </p>
+    """,
+    unsafe_allow_html=True
+)
 
 
 
