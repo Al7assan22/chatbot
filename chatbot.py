@@ -4,7 +4,7 @@ import google.generativeai as genai
 
 genai.configure(api_key=("AIzaSyDqferTB7u2X44NuEPEQKgO2tYIVfmV0fE"))
 
-df = pd.read_excel("cleaned_kaggle_dashboard10.xlsx")
+df = pd.read_excel("cleaned_data.xlsx")
 
 def ask_gemini(question, df):
 
@@ -71,6 +71,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
