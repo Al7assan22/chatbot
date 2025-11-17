@@ -4,7 +4,7 @@ import google.generativeai as genai
 
 genai.configure(api_key=("AIzaSyDqferTB7u2X44NuEPEQKgO2tYIVfmV0fE"))
 
-df = pd.read_excel(MTA_Daily_Ridership.csv)
+df = pd.read_csv("MTA_Daily_Ridership.csv")
 def ask_gemini(question, df):
     context = df.head(100).to_string(index=False)
     prompt = f"""
@@ -127,6 +127,7 @@ if final_question:
         <p>{answer}</p>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
