@@ -4,15 +4,12 @@ import google.generativeai as genai
 
 genai.configure(api_key=("AIzaSyDqferTB7u2X44NuEPEQKgO2tYIVfmV0fE"))
 
-df = pd.read_excel("cleaned_data.xlsx")
-
+df = pd.read_excel(r"C:\\Users\\AL HASSAN\Downloads\\MTA_Daily_Ridership.csv")
 def ask_gemini(question, df):
-
     context = df.head(100).to_string(index=False)
-    
     prompt = f"""
     You are a data analysis assistant. 
-    The user is asking a question about a large dataset.
+    The user is asking a question about a sample dataset.
     {context}
     
     Based on this data, answer the question clearly:
@@ -22,21 +19,88 @@ def ask_gemini(question, df):
     response = model.generate_content(prompt)
     return response.text
 
-st.set_page_config(page_title="Kaggle Survey analysis Chatbot", page_icon="📋", layout="wide")
+st.set_page_config(page_title="Kaggle Survey Analysis Chatbot", page_icon="📊", layout="wide")
+
+# ====== تصميم احترافي كامل باللون الأزرق ======
 st.markdown(
     """
-    <div style="text-align:center;">
-        <img src="https://th.bing.com/th/id/OIP.Ii0ROnrWLvyuSHP3wzjhZwHaE8?pid=ImgDetMain" 
-             alt="Logo" width="300" style="border-radius:15px;margin-bottom:15px;">
-        <h1 style="color:#1CABE2;">Kaggle Survey Analysis Chatbot</h1>
-        <p style="color:white;font-size:18px;margin-top:-5px;">
-        Ask questions about your data directly or choose one from the sidebar.
-        </p>
+    <style>
+        /* الخلفية الرئيسية للصفحة */
+        .stApp {
+            background: linear-gradient(to bottom, #1CABE2, #ffffff);
+            color: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Sidebar مظلل */
+        .css-1d391kg {
+            background-color: #007ACC;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* العناوين */
+        h1 {
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #000000;
+        }
+        h2, h3, h4, p {
+            color: #000000;
+        }
+
+        /* Text area */
+        .stTextArea textarea {
+            background-color: #f0f8ff;
+            border: 1px solid #b0b0b0;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        /* Buttons */
+        .stButton button {
+            background-color: #005f99;
+            color: white;
+            border-radius: 10px;
+            padding: 10px 25px;
+            font-weight: bold;
+            border: none;
+            transition: 0.3s;
+        }
+        .stButton button:hover {
+            background-color: #004f80;
+            cursor: pointer;
+        }
+
+        /* Cards للإجابة */
+        .answer-card {
+            background-color: #ffffffcc;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 2px 2px 15px rgba(0,0,0,0.3);
+        }
+
+        /* صورة في مكان السؤال */
+        .main-image {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 250px;
+            border-radius: 15px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.4);
+        }
+    </style>
+
+    <div style="text-align:center; margin-bottom:30px;">
+        <img class="main-image" src="https://th.bing.com/th/id/OIP.Ii0ROnrWLvyuSHP3wzjhZwHaE8?pid=ImgDetMain" alt="Logo">
+        <h1>Kaggle Survey Analysis Chatbot</h1>
+        <p style="font-size:18px;">Ask questions about your dataset or pick one from the sidebar</p>
     </div>
     """,
     unsafe_allow_html=True
 )
 
+# ====== Sidebar ======
 st.sidebar.header("📌 Pinned Questions")
 Pinned_questions = [
     "What is the most common programming language used by data professionals?",
@@ -45,32 +109,26 @@ Pinned_questions = [
     "What education level do most participants have?",
     "Which country has the highest number of survey respondents?"
 ]
-
 selected_question = st.sidebar.radio("Select a question:", options=[""] + Pinned_questions, index=0)
+
+# ====== Main Content ======
 st.subheader("✍️ Write your question:")
 user_question = st.text_area("Input your question here...", height=120)
 
-
-final_question = None
-if selected_question and selected_question.strip():
-    final_question = selected_question
-elif user_question.strip():
-    final_question = user_question
+final_question = selected_question if selected_question.strip() else user_question if user_question.strip() else None
 
 if final_question:
     with st.spinner("⏳ Gemini is thinking..."):
         answer = ask_gemini(final_question, df)
-    st.write("✅ Answer:")
-    st.write(answer)
-st.markdown(
-    """
-    <hr>
-    <p style="text-align:center;color:#AAAAAA;font-size:12px;">
-    Developed by <strong>Alhassan Mohamed Haggag</strong>
-    </p>
-    """,
-    unsafe_allow_html=True
-)
+    
+    st.markdown(f"""
+    <div class="answer-card">
+        <h3>✅ Answer:</h3>
+        <p>{answer}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 
 
 
