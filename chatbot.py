@@ -51,6 +51,7 @@ st.markdown(
         /* Text area */
         .stTextArea textarea {
             background-color: #f0f8ff;
+            color: #000000;           /* النص باللون الأسود */
             border: 1px solid #b0b0b0;
             border-radius: 10px;
             padding: 10px;
@@ -127,6 +128,7 @@ if final_question:
         <p>{answer}</p>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
