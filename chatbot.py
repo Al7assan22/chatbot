@@ -3,131 +3,157 @@ import pandas as pd
 import google.generativeai as genai
 import matplotlib.pyplot as plt
 import seaborn as sns
-import io
+import os
 
-genai.configure(api_key=("AIzaSyDqferTB7u2X44NuEPEQKgO2tYIVfmV0fE"))
+# ================== 1. Setup API Key and Gemini ==================
+api_key = os.getenv("GEMINI_API_KEY", "AIzaSyDXshRhEVBA9tx3yQEjNd6x_ZaglwLpXSI")
+if not api_key:
+    st.error("Please set the Gemini API key in the GEMINI_API_KEY environment variable.")
+    st.stop()
+else:
+    genai.configure(api_key=api_key)
 
-# ====== قراءة البيانات ======
-df = pd.read_csv("MTA_Daily_Ridership.csv")  # لو CSV
+# ================== 2. Load Dataset ==================
+try:
+    df = pd.read_csv("MTA_Daily_Ridership.csv")
+except FileNotFoundError:
+    st.error("Could not find the file 'MTA_Daily_Ridership.csv'. Check the file path.")
+    st.stop()
 
-# ====== دالة استدعاء Gemini ======
+# Automatically detect key columns
+date_col = next((col for col in df.columns if 'date' in col.lower()), None)
+ridership_col = next((col for col in df.columns if 'ridership' in col.lower()), None)
+station_col = next((col for col in df.columns if 'station' in col.lower()), None)
+
+if date_col:
+    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+
+# ================== 3. Gemini AI Query Function ==================
 def ask_gemini(question, df):
-    context = df.head(100).to_string(index=False)
-    prompt = f"""
-    You are a data analysis assistant. 
-    The user is asking a question about a sample dataset.
-    {context}
+    # Use only key columns and fewer rows to avoid blank response
+    columns_to_use = [c for c in [date_col, ridership_col, station_col] if c is not None]
+    context = df[columns_to_use].head(20).to_string(index=False)
     
-    Based on this data, answer the question clearly.
-    If the user asks for a visual, respond with Python code using matplotlib or seaborn.
-    Question: {question}
-    """
+    prompt = f"""
+You are a helpful data analysis assistant.
+The user asked a question about a sample dataset:
+
+{context}
+
+Answer the question clearly.
+If the user asks for a chart or visual, return Python code using matplotlib or seaborn.
+Do not leave the answer empty.
+
+Question: {question}
+"""
     model = genai.GenerativeModel("gemini-2.5-flash")
     response = model.generate_content(prompt)
     return response.text
 
-# ====== Streamlit Page Config ======
+# ================== 4. Streamlit UI ==================
 st.set_page_config(page_title="MTA Ridership Chatbot", page_icon="📊", layout="wide")
 
-# ====== CSS وتصميم الصفحة ======
-st.markdown(
-    """
-    <style>
-        .stApp {
-            background: linear-gradient(to bottom, #1CABE2, #ffffff);
-            color: #000000;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .css-1d391kg {
-            background-color: #007ACC;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        h1 { color: #ffffff; text-shadow: 1px 1px 2px #000000; }
-        h2, h3, h4, p { color: #000000; }
-        .stTextArea textarea {
-            background-color: #f0f8ff;
-            color: #000000;
-            border: 1px solid #b0b0b0;
-            border-radius: 10px;
-            padding: 10px;
-        }
-        .stButton button {
-            background-color: #005f99;
-            color: white;
-            border-radius: 10px;
-            padding: 10px 25px;
-            font-weight: bold;
-            border: none;
-            transition: 0.3s;
-        }
-        .stButton button:hover {
-            background-color: #004f80;
-            cursor: pointer;
-        }
-        .answer-card {
-            background-color: #ffffffcc;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 2px 2px 15px rgba(0,0,0,0.3);
-        }
-        .main-image {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 250px;
-            border-radius: 15px;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.4);
-        }
-    </style>
+st.markdown("""
+<style>
+.stApp { 
+    background-image: url("https://i.postimg.cc/nLSV7sRF/Whats-App-Image-2025-11-23-at-12-01-57-AM.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: #FFD700;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+}
+h1 { 
+    color: #FFD700; 
+    text-shadow: 2px 2px 5px #000000; 
+    text-align:center;
+}
+.answer-card { 
+    background-color: rgba(255,255,255,0.8); 
+    border-radius: 15px; 
+    padding: 20px; 
+    margin-top: 20px; 
+    box-shadow: 2px 2px 15px rgba(0,0,0,0.5); 
+    color: #000000;
+}
+.stTextArea textarea { 
+    background-color: rgba(255,255,255,0.8); 
+    color: #000000; 
+    border: 1px solid #b0b0b0; 
+    border-radius: 10px; 
+    padding: 10px; 
+}
+.stButton button { 
+    background-color: #005f99; 
+    color: white; 
+    border-radius: 10px; 
+    padding: 10px 25px; 
+    font-weight: bold; 
+    border: none; 
+    transition: 0.3s; 
+}
+.stButton button:hover { 
+    background-color: #004f80; 
+    cursor: pointer; 
+}
+</style>
 
-    <div style="text-align:center; margin-bottom:30px;">
-        <img class="main-image" src="https://th.bing.com/th/id/OIP.Ii0ROnrWLvyuSHP3wzjhZwHaE8?pid=ImgDetMain" alt="Logo">
-        <h1>MTA Ridership Chatbot</h1>
-        <p style="font-size:18px;">Ask questions about your dataset or pick one from the sidebar</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+<div style="text-align:center; margin-bottom:30px;">
+    <h1>MTA Ridership Chatbot</h1>
+    <p style="font-size:18px; color:#FFFFFF;">Ask questions about your dataset or pick one from the sidebar</p>
+</div>
+""", unsafe_allow_html=True) 
 
-# ====== Sidebar ======
-st.sidebar.header("📌 Pinned Questions")
-Pinned_questions = [
+# ================== 5. Store Chat Messages ==================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+def add_message(role, content, fig=None):
+    st.session_state.messages.append({"role": role, "content": content, "chart_figure": fig})
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+        if message.get("chart_figure"):
+            st.pyplot(message["chart_figure"])
+
+# ================== 6. Sidebar ==================
+st.sidebar.header("Pinned Questions")
+pinned_questions = [
     "What is the total ridership by year?",
     "Show the top 5 busiest stations.",
     "Visualize ridership trends over time.",
     "Average daily ridership per month.",
     "Compare weekday vs weekend ridership."
 ]
-selected_question = st.sidebar.radio("Select a question:", options=[""] + Pinned_questions, index=0)
+selected_question = st.sidebar.radio("Select a question:", options=[""] + pinned_questions, index=0)
 
-# ====== Main Content ======
-st.subheader("✍️ Write your question:")
-user_question = st.text_area("Input your question here...", height=120)
+# ================== 7. Handle User Input ==================
+user_prompt = st.chat_input("Write your question:")
 
-final_question = selected_question if selected_question.strip() else user_question if user_question.strip() else None
+if selected_question.strip():
+    final_question = selected_question
+elif user_prompt:
+    final_question = user_prompt
+else:
+    final_question = None
 
 if final_question:
-    with st.spinner("⏳ Gemini is thinking..."):
-        answer = ask_gemini(final_question, df)
-    
-    # ==== إذا Gemini رجع كود للـ visual نقدر ننفذه ====
-    if "plt." in answer or "sns." in answer:
-        st.markdown(f"<div class='answer-card'><h3>✅ AI Generated Visual Code:</h3></div>", unsafe_allow_html=True)
-        try:
-            # تنفيذ الكود الناتج من AI
-            exec(answer)
-            st.pyplot(plt)
-        except Exception as e:
-            st.error(f"Error executing visual: {e}")
-    else:
-        st.markdown(f"""
-        <div class="answer-card">
-            <h3>✅ Answer:</h3>
-            <p>{answer}</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Display user question
+    with st.chat_message("user"):
+        st.write(final_question)
+    add_message("user", final_question)
+
+    # Get AI response
+    with st.chat_message("assistant"):
+        with st.spinner("Gemini is thinking..."):
+            answer = ask_gemini(final_question, df)
+
+            # Display the answer
+            st.write(answer)
+            add_message("assistant", answer)
+
 
 
 
